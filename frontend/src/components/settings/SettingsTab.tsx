@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { AppTheme, EditorTheme, Settings } from "../../types";
 import { capitalize } from "../../lib/utils";
 import {
@@ -9,7 +10,10 @@ import {
 } from "../ui/select";
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
+import { Button } from "../ui/button";
 import { IS_RUNNING_ON_CLOUD } from "../../config";
+import { useAuthStore } from "../../store/auth-store";
+import { LogOut } from "lucide-react";
 
 interface Props {
   settings: Settings;
@@ -19,11 +23,19 @@ interface Props {
 }
 
 function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
+  const navigate = useNavigate();
+  const { logout } = useAuthStore();
+
   const handleThemeChange = (theme: EditorTheme) => {
     setSettings((s) => ({
       ...s,
       editorTheme: theme,
     }));
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -265,6 +277,25 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   }))
                 }
               />
+            </div>
+          </div>
+
+          {/* Account */}
+          <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
+              <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                Account
+              </h2>
+            </div>
+            <div className="p-4">
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                className="w-full"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>

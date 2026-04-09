@@ -18,3 +18,5 @@ frontend/.env.local
 
 #Rodney
 .rodney
+.idea
+.claude

@@ -10,20 +10,69 @@ import RunEvalsPage from "./components/evals/RunEvalsPage.tsx";
 import BestOfNEvalsPage from "./components/evals/BestOfNEvalsPage.tsx";
 import AllEvalsPage from "./components/evals/AllEvalsPage.tsx";
 import OpenAIInputComparePage from "./components/evals/OpenAIInputComparePage.tsx";
+import LoginPage from "./components/auth/LoginPage.tsx";
+import AuthGuard from "./components/auth/AuthGuard.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Router>
       <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/evals" element={<AllEvalsPage />} />
-        <Route path="/evals/single" element={<EvalsPage />} />
-        <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
-        <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
-        <Route path="/evals/run" element={<RunEvalsPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <AuthGuard>
+              <App />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/evals"
+          element={
+            <AuthGuard>
+              <AllEvalsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/evals/single"
+          element={
+            <AuthGuard>
+              <EvalsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/evals/pairwise"
+          element={
+            <AuthGuard>
+              <PairwiseEvalsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/evals/best-of-n"
+          element={
+            <AuthGuard>
+              <BestOfNEvalsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/evals/run"
+          element={
+            <AuthGuard>
+              <RunEvalsPage />
+            </AuthGuard>
+          }
+        />
         <Route
           path="/evals/openai-input-compare"
-          element={<OpenAIInputComparePage />}
+          element={
+            <AuthGuard>
+              <OpenAIInputComparePage />
+            </AuthGuard>
+          }
         />
       </Routes>
     </Router>

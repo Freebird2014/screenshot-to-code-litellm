@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import traceback
 from typing import Callable, Awaitable
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from auth import verify_websocket_token
 import openai
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from config import (
@@ -819,6 +820,12 @@ class PostProcessingMiddleware(Middleware):
 @router.websocket("/generate-code")
 async def stream_code(websocket: WebSocket):
     """Handle WebSocket code generation requests using a pipeline pattern"""
+    # Verify token first
+    try:
+        await verify_websocket_token(websocket)
+    except ValueError:
+        return  # Connection already closed by verify_websocket_token
+
     pipeline = Pipeline()
 
     # Configure the pipeline

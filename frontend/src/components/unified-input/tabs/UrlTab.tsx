@@ -5,6 +5,7 @@ import { Input } from "../../ui/input";
 import { toast } from "react-hot-toast";
 import OutputSettingsSection from "../../settings/OutputSettingsSection";
 import { Stack } from "../../../lib/stacks";
+import { useAuthStore } from "../../../store/auth-store";
 
 interface Props {
   screenshotOneApiKey: string | null;
@@ -58,6 +59,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
 
     try {
       setIsLoading(true);
+      const authHeaders = useAuthStore.getState().getAuthHeaders();
       const response = await fetch(`${HTTP_BACKEND_URL}/api/screenshot`, {
         method: "POST",
         body: JSON.stringify({
@@ -66,6 +68,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
         }),
         headers: {
           "Content-Type": "application/json",
+          ...authHeaders,
         },
       });
 

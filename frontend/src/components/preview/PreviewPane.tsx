@@ -10,6 +10,9 @@ import {
   LuExternalLink,
   LuRefreshCw,
   LuDownload,
+  LuUpload,
+  LuCheck,
+  LuCopy,
 } from "react-icons/lu";
 import { useMemo, useState } from "react";
 import { AppState, Settings } from "../../types";
@@ -20,6 +23,7 @@ import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
+import { deployToServer } from "./deploy";
 
 function openInNewTab(code: string) {
   const newWindow = window.open("", "_blank");
@@ -41,6 +45,43 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
   const [activeTab, setActiveTab] = useState("desktop");
   const [desktopScale, setDesktopScale] = useState(1);
   const [desktopViewMode, setDesktopViewMode] = useState<"fit" | "actual">("fit");
+
+  // Deployment state
+  const [deployState, setDeployState] = useState<
+    "idle" | "deploying" | "success" | "error"
+  >("idle");
+  const [deployUrl, setDeployUrl] = useState<string>("");
+  const [deployError, setDeployError] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  const handleDeploy = async (code: string) => {
+    if (!code || !code.trim()) {
+      setDeployError("No code to deploy");
+      setDeployState("error");
+      return;
+    }
+
+    setDeployState("deploying");
+    setDeployError("");
+    setDeployUrl("");
+
+    try {
+      const result = await deployToServer(code);
+      setDeployUrl(result.url);
+      setDeployState("success");
+    } catch (error) {
+      setDeployError(error instanceof Error ? error.message : "Deployment failed");
+      setDeployState("error");
+    }
+  };
+
+  const copyDeployUrl = async () => {
+    if (deployUrl) {
+      await navigator.clipboard.writeText(deployUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // Sorted commit list for version navigation
   const sortedCommits = useMemo(() =>
@@ -180,16 +221,33 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
 
           <div className="flex items-center gap-1">
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
-              <Button
-                onClick={() => downloadCode(previewCode)}
-                variant="ghost"
-                size="icon"
-                title="Download Code"
-                className="h-9 w-9"
-                data-testid="download-code"
-              >
-                <LuDownload />
-              </Button>
+              <>
+                <Button
+                  onClick={() => handleDeploy(previewCode)}
+                  variant="ghost"
+                  size="icon"
+                  title="Deploy to Server"
+                  className="h-9 w-9"
+                  data-testid="deploy-code"
+                  disabled={deployState === "deploying"}
+                >
+                  {deployState === "deploying" ? (
+                    <span className="animate-spin text-sm">⏳</span>
+                  ) : (
+                    <LuUpload />
+                  )}
+                </Button>
+                <Button
+                  onClick={() => downloadCode(previewCode)}
+                  variant="ghost"
+                  size="icon"
+                  title="Download Code"
+                  className="h-9 w-9"
+                  data-testid="download-code"
+                >
+                  <LuDownload />
+                </Button>
+              </>
             )}
             <Button
               onClick={() => {
@@ -211,6 +269,52 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
             </Button>
           </div>
         </div>
+
+        {/* Deployment status bar */}
+        {(deployState === "success" || deployState === "error") && (
+          <div className="px-4 py-2 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900">
+            {deployState === "success" && deployUrl && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Deployed:
+                </span>
+                <a
+                  href={deployUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline truncate"
+                >
+                  {deployUrl}
+                </a>
+                <Button
+                  onClick={copyDeployUrl}
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                >
+                  {copied ? (
+                    <>
+                      <LuCheck className="w-3 h-3 mr-1" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <LuCopy className="w-3 h-3 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+            {deployState === "error" && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-red-600 dark:text-red-400">
+                  Error: {deployError}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         <TabsContent value="desktop" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
           <PreviewComponent
             code={previewCode}

@@ -5,6 +5,7 @@ import {
   USER_CLOSE_WEB_SOCKET_CODE,
 } from "./constants";
 import { FullGenerationSettings } from "./types";
+import { useAuthStore } from "./store/auth-store";
 
 const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console AND the backend logs for details. Feel free to open a Github issue.";
@@ -55,7 +56,10 @@ export function generateCode(
   params: FullGenerationSettings,
   callbacks: CodeGenerationCallbacks
 ) {
-  const wsUrl = `${WS_BACKEND_URL}/generate-code`;
+  // Get token from auth store
+  const token = useAuthStore.getState().token;
+  const encodedToken = token ? encodeURIComponent(token) : "";
+  const wsUrl = `${WS_BACKEND_URL}/generate-code?token=${encodedToken}`;
   console.log("Connecting to backend @ ", wsUrl);
 
   const ws = new WebSocket(wsUrl);

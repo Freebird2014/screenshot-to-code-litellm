@@ -28,7 +28,7 @@ function UnifiedInputPane({
   settings,
   setSettings,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<InputTab>("upload");
+  const [activeTab, setActiveTab] = useState<InputTab>("text");
 
   function setStack(stack: Stack) {
     setSettings((prev: Settings) => ({
